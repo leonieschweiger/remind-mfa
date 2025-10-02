@@ -1,6 +1,6 @@
 from remind_mfa.common.base_model import RemindMFABaseModel
 import flodym as fd
-from typing import Optional
+from typing import Callable, Optional, Dict, Union
 
 from .data_extrapolations import Extrapolation
 from .parameter_extrapolation import ParameterExtrapolation
@@ -35,7 +35,7 @@ class ModelSwitches(RemindMFABaseModel):
     do_stock_extrapolation_by_category: bool = False
     do_gdppc_time_regression: bool = False
     mode: Optional[str] = None
-    parameter_extrapolation: Optional[dict[str, str]] = None
+    parameter_extrapolation: Optional[Dict[str, Union[str, dict]]] = None
 
     @property
     def lifetime_model(self) -> type[fd.LifetimeModel]:
@@ -47,16 +47,28 @@ class ModelSwitches(RemindMFABaseModel):
         return choose_subclass_by_name(self.stock_extrapolation_class_name, Extrapolation)
 
     @property
-    def parameter_extrapolation_classes(self) -> Optional[dict[str, type[ParameterExtrapolation]]]:
-        """Check if the given parameter extrapolation classes are valid subclasses of ParameterExtrapolation and return them."""
+    def parameter_extrapolation_classes(self) -> Optional[dict[str, Callable[[], ParameterExtrapolation]]]:
+        """Return factory functions for parameter extrapolations (with or without kwargs)."""
         if self.parameter_extrapolation is None:
             return None
 
         classes = {}
-        for param_name, class_name in self.parameter_extrapolation.items():
-            classes[param_name] = choose_subclass_by_name(class_name, ParameterExtrapolation)
-        return classes
+        for param_name, spec in self.parameter_extrapolation.items():
+            if isinstance(spec, str):
+                # Old style: only class name
+                cls = choose_subclass_by_name(spec, ParameterExtrapolation)
+                classes[param_name] = lambda cls=cls: cls()
 
+            elif isinstance(spec, dict):
+                # New style: class + kwargs
+                cls = choose_subclass_by_name(spec["class"], ParameterExtrapolation)
+                kwargs = {k: v for k, v in spec.items() if k != "class"}
+                classes[param_name] = lambda cls=cls, kwargs=kwargs: cls(**kwargs)
+
+            else:
+                raise ValueError(f"Invalid parameter extrapolation spec for {param_name}: {spec}")
+
+        return classes
 
 class ExportCfg(RemindMFABaseModel):
     csv: bool = True

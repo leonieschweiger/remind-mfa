@@ -12,6 +12,19 @@ model_switches:
   do_gdppc_time_regression: True # if True, gdppc is already log-transformed, so do not choose 'LogSigmoidExtrapolation'
   lifetime_model_name: 'NormalLifetime'
   do_stock_extrapolation_by_category: True
+  parameter_extrapolation:
+    hist_collection_rate:
+      class: LinearToTargetExtrapolation
+      target_value: 1.0
+      target_year: 21000
+    hist_incineration_rate:
+      class: LinearToTargetExtrapolation
+      target_value: 0.3
+      target_year: 2100
+    hist_mechanical_recycling_rate:
+      class: LinearToTargetExtrapolation
+      target_value: 0.4
+      target_year: 2100
 
 # visualization
 visualization:

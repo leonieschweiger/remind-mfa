@@ -74,7 +74,52 @@ class ConstantExtrapolation(ParameterExtrapolation):
     def description(self) -> str:
         return "Parameter is kept constant into the future at last observed value."
 
+class LinearToTargetExtrapolation(ParameterExtrapolation):
+    """
+    Extrapolate linearly from the last observed value to a target value in a target year,
+    then keep it constant afterwards.
+    """
 
+    def __init__(self, target_value: float, target_year: int):
+        self._target_value = target_value
+        self._target_year = target_year
+
+    def fill_future_values(
+        self, old_param: fd.Parameter, new_param: fd.FlodymArray
+    ) -> fd.Parameter:
+        add_assumption_doc(
+            type="model switch",
+            name=f"Linear extrapolation of {old_param.name} to target",
+            description=self.description,
+        )
+
+        # Get last historic year + value
+        last_historic_year = old_param.dims["h"].items[-1]
+        last_value = old_param[{"h": last_historic_year}]
+
+        # Iterate through future years
+        for year in new_param.dims["t"].items:
+            if year <= last_historic_year:
+                continue  # skip historic
+            elif year < self._target_year:
+                # Linear interpolation between last value and target
+                frac = (year - last_historic_year) / (self._target_year - last_historic_year)
+                value = last_value + frac * (self._target_value - last_value)
+            elif year >= self._target_year:
+                # After (and including) target year: hold constant
+                value = self._target_value
+
+            new_param[{"t": year}] = value
+
+        return new_param
+
+    @property
+    def description(self) -> str:
+        return (
+            f"Parameter is linearly extrapolated to {self._target_value} in "
+            f"{self._target_year} and then kept constant."
+        )
+    
 class ParameterExtrapolationManager:
     """Manager for applying parameter extrapolations."""
 

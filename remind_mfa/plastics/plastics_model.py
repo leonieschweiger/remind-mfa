@@ -3,6 +3,7 @@ import flodym as fd
 
 
 from remind_mfa.common.common_cfg import GeneralCfg
+from remind_mfa.common.parameter_extrapolation import ParameterExtrapolationManager
 from .plastics_mfa_system import PlasticsMFASystemFuture
 from .plastics_mfa_system_historic import PlasticsMFASystemHistoric
 from .plastics_export import PlasticsDataExporter
@@ -97,8 +98,14 @@ class PlasticsModel:
 
     def run(self):
         self.mfa_historic = self.make_mfa(self.definition_historic, mfasystem_class=PlasticsMFASystemHistoric)
-        self.mfa_future = self.make_mfa(self.definition_future, mfasystem_class=PlasticsMFASystemFuture)
         self.mfa_historic.compute()
+        
+        # apply scenarios to parameters for future mfa
+        self.parameters = ParameterExtrapolationManager(
+            self.cfg, self.dims["t"]
+        ).apply_prm_extrapolation(self.parameters)
+
+        self.mfa_future = self.make_mfa(self.definition_future, mfasystem_class=PlasticsMFASystemFuture)
         self.mfa_future.compute(
             historic_stock=self.mfa_historic.stocks["in_use_historic"],
             historic_trade=self.mfa_historic.trade_set,

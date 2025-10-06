@@ -87,7 +87,7 @@ class MrindustryDataReader(fd.CompoundDataReader):
         parameter_files = {}
         for parameter in self.definition.parameters:
             parameter_files[parameter.name] = os.path.join(
-                self.extracted_input_data_path, f"{parameter.name}.cs4r"
+                self.extracted_input_data_path, f"plastic_{parameter.name}.cs4r"
             )
         parameter_reader = MrindustryParameterReader(parameter_files, allow_extra_values=self.allow_extra_values, allow_missing_values=self.allow_missing_values)
 

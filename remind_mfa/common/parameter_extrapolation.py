@@ -104,10 +104,10 @@ class LinearToTargetExtrapolation(ParameterExtrapolation):
             elif year < self._target_year:
                 # Linear interpolation between last value and target
                 frac = (year - last_historic_year) / (self._target_year - last_historic_year)
-                value = last_value + frac * (self._target_value - last_value)
+                value = (last_value + frac * (self._target_value - last_value)).copy()
             elif year >= self._target_year:
                 # After (and including) target year: hold constant
-                value = self._target_value
+                value = last_value.copy() * 0 + self._target_value
 
             new_param[{"t": year}] = value
 

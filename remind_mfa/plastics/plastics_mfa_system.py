@@ -198,8 +198,8 @@ class PlasticsMFASystemFuture(fd.MFASystem):
         flw["waste_imports => collected"][...] = flw["waste_market => waste_imports"]
         flw["collected => waste_exports"][...] = flw["waste_exports => waste_market"]
 
-        flw["eol => collected"][...] = flw["use => eol"] * prm["collection_rate"]
-        flw["collected => reclmech"][...] = (flw["eol => collected"] + flw["waste_imports => collected"] - flw["collected => waste_exports"]) * prm["mechanical_recycling_rate"]
+        flw["eol => collected"][...] = flw["use => eol"] * prm["hist_collection_rate"]
+        flw["collected => reclmech"][...] = (flw["eol => collected"] + flw["waste_imports => collected"] - flw["collected => waste_exports"]) * prm["hist_mechanical_recycling_rate"]
         flw["reclmech => processing"][...] = flw["collected => reclmech"] * prm["mechanical_recycling_yield"]
         aux["reclmech_loss"][...] = flw["collected => reclmech"] - flw["reclmech => processing"]
         flw["reclmech => uncontrolled"][...] = aux["reclmech_loss"] * prm["reclmech_loss_uncontrolled_rate"]
@@ -208,7 +208,7 @@ class PlasticsMFASystemFuture(fd.MFASystem):
         flw["collected => reclchem"][...] = (flw["eol => collected"] + flw["waste_imports => collected"] - flw["collected => waste_exports"]) * prm["chemical_recycling_rate"]
         flw["reclchem => virgin"][...] = flw["collected => reclchem"]
 
-        flw["collected => incineration"][...] = (flw["eol => collected"] + flw["waste_imports => collected"] - flw["collected => waste_exports"]) * prm["incineration_rate"]
+        flw["collected => incineration"][...] = (flw["eol => collected"] + flw["waste_imports => collected"] - flw["collected => waste_exports"]) * prm["hist_incineration_rate"]
 
         flw["collected => landfill"][...] = (
             flw["eol => collected"]

@@ -16,7 +16,7 @@ model_switches:
     hist_collection_rate:
       class: LinearToTargetExtrapolation
       target_value: 1.0
-      target_year: 21000
+      target_year: 2100
     hist_incineration_rate:
       class: LinearToTargetExtrapolation
       target_value: 0.3
@@ -43,7 +43,7 @@ visualization:
   sankey:
     do_visualize: True
     slice_dict:
-      t: 2020
+      t: 2050
     exclude_processes:
       #- "sysenv"
       #- "waste_market"

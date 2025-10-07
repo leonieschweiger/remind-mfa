@@ -73,6 +73,7 @@ class PlasticsDataExporter(CommonDataExporter):
 
         if self.cfg.production["do_visualize"]:
             self.visualize_demand(mfa=model.mfa_future)
+            self.visualize_sector_splits(mfa=model.mfa_future)
 
         if self.cfg.extrapolation["do_visualize"]:
             self.visualize_extrapolation(model=model)
@@ -321,7 +322,7 @@ class PlasticsDataExporter(CommonDataExporter):
                 fn: emission_color
                 for fn, f in mfa.flows.items()
                 if f.to_process.name
-                in ("atmosphere", "mismanaged", "incineration", "uncontrolled", "emission")
+                in ("atmosphere", "mismanaged", "uncontrolled", "emission")
             }
         )
 
@@ -332,6 +333,16 @@ class PlasticsDataExporter(CommonDataExporter):
                 for fn, f in mfa.flows.items()
                 if f.from_process.name in ("reclmech", "reclchem")
                 or f.to_process.name in ("reclmech", "reclchem")
+            }
+        )
+
+        # Assign colors to trade flows
+        flow_color_dict.update(
+            {
+                fn: trade_color
+                for fn, f in mfa.flows.items()
+                if f.from_process.name in ("primary_imports","intermediate_imports","waste_imports","final_imports")
+                or f.to_process.name in ("primary_exports","intermediate_exports","waste_exports","final_exports")
             }
         )
 
@@ -358,7 +369,8 @@ class PlasticsDataExporter(CommonDataExporter):
         legend_entries = [
             (production_color, "Production"),
             (eol_color, "End-of-Life"),
-            (recycle_color, "Use"),
+            (recycle_color, "Recycling"),
+            (use_color, "Use"),
             (emission_color, "Losses"),
             (trade_color, "Trade"),
         ]
@@ -381,6 +393,39 @@ class PlasticsDataExporter(CommonDataExporter):
         fig.update_yaxes(visible=False)
 
         self._show_and_save_plotly(fig, name="sankey")
+
+    def visualize_sector_splits(self, mfa: fd.MFASystem, regional: bool = True):
+
+        subplot_dim, summing_func, name_str = self._get_regional_vs_global_params(regional)
+
+        consumption = summing_func(mfa.stocks["in_use"].inflow)
+        sector_splits = consumption.get_shares_over("g")
+        sector_splits = sector_splits.cumsum(dim_letter="g")
+
+        ap_sector_splits = self.plotter_class(
+            array=sector_splits,
+            intra_line_dim="Time",
+            **subplot_dim,
+            linecolor_dim="Good",
+            xlabel="Year",
+            ylabel="Sector Splits [%]",
+            display_names=self._display_names,
+            title=f"Product demand sector splits ({name_str})",
+            chart_type="area",
+        )
+
+        self.plot_and_save_figure(ap_sector_splits, f"sector_splits_{name_str}.png")
+    
+    def _get_regional_vs_global_params(self, regional: bool):
+        if regional:
+            subplot_dim = {"subplot_dim": "Region"}
+            summing_func = lambda l: l.sum_over(("m", "e"))
+            name_str = "regional"
+        else:
+            subplot_dim = {}
+            summing_func = lambda l: l.sum_over("r", "m", "e")
+            name_str = "global"
+        return subplot_dim, summing_func, name_str
 
     def visualize_extrapolation(self, model: "PlasticsModel"):
         mfa = model.mfa_future

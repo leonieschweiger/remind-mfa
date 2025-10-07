@@ -45,8 +45,8 @@ visualization:
     slice_dict:
       t: 2050
     exclude_processes:
-      #- "sysenv"
-      #- "waste_market"
+      - "sysenv"
+      - "waste_market"
       - "primary_market"
       - "intermediate_market"
       - "good_market"

@@ -114,8 +114,6 @@ def get_definition(cfg: GeneralCfg, historic: bool) -> PlasticsMFADefinition:
             fd.FlowDefinition(from_process="emission", to_process="atmosphere", dim_letters=("t","e","r")),
             fd.FlowDefinition(from_process="captured", to_process="virginccu", dim_letters=("t","e","r")),
 
-            fd.FlowDefinition(from_process="sysenv", to_process="good_market", dim_letters=("t","r")),
-
             # waste trade
             fd.FlowDefinition(from_process="waste_market", to_process="waste_imports", dim_letters=("t","e","r","m")),
             fd.FlowDefinition(from_process="waste_imports", to_process="collected", dim_letters=("t","e","r","m")),

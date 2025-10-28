@@ -44,17 +44,9 @@ class PlasticsDataExporter(CommonDataExporter):
         "emission": "Emissions",
         "captured": "Captured",
         "atmosphere": "Atmosphere",
-        "waste_imports": "Wastes Imports",
-        "waste_exports": "Wastes Exports",
         "waste_market": "Waste Market",
-        "primary_imports": "Prim Imports",
-        "primary_exports": "Prim Exports",
         "primary_market": "Prim Market",
-        "intermediate_imports": "Inter Imports",
-        "intermediate_exports": "Inter Exports",
         "intermediate_market": "Inter Market",
-        "final_imports": "Final Imports",
-        "final_exports": "Final Exports",
         "good_market": "Good Market",
     }
 
@@ -99,8 +91,14 @@ class PlasticsDataExporter(CommonDataExporter):
             )
             self.visualize_flow(
                 mfa=model.mfa_future,
-                flow=model.mfa_future.flows["recl => fabrication"],
-                name="Secondary production",
+                flow=model.mfa_future.flows["reclmech => processing"],
+                name="Mechanical recycling",
+                subplot_dim="Material",
+            )
+            self.visualize_flow(
+                mfa=model.mfa_future,
+                flow=model.mfa_future.flows["reclchem => virgin"],
+                name="Chemical recycling",
                 subplot_dim="Material",
             )
             self.visualize_flow(
@@ -564,8 +562,8 @@ class PlasticsDataExporter(CommonDataExporter):
     ):
         eol_data = (
             mfa.flows["eol => collected"]
-            + mfa.flows["waste_imports => collected"]
-            - mfa.flows["collected => waste_exports"]
+            + mfa.flows["waste_market => collected"]
+            - mfa.flows["collected => waste_market"]
         )
         df = eol_data.sum_to(("t", "r", "m")).to_df(index=True)
         df.to_csv(self.export_path(output_path), index=True)

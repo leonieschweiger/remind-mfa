@@ -50,10 +50,13 @@ class PlasticsMFASystemFuture(fd.MFASystem):
         )
         historic_pop = self.parameters["population"][{"t": self.dims["h"]}]
         stock_pc = historic_stock.stock / historic_pop
-        indep_fit_dim_letters = ("g",)
-        upper_bound = fd.FlodymArray(
-            dims=self.dims[indep_fit_dim_letters],
+        indep_fit_dim_letters = ("r","g",)
+        stock_max = fd.FlodymArray(
+            dims=self.dims[("g",)],
             values=np.max(stock_pc.values, axis=(stock_pc.dims.index("h"),stock_pc.dims.index("r"))) * 1.2,
+        )
+        upper_bound = stock_max.cast_to(
+            self.dims[indep_fit_dim_letters]
         )
         sat_bound = Bound(
             var_name="saturation_level",

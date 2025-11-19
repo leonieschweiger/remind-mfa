@@ -42,7 +42,7 @@ visualization:
   do_save_figs: True
 
 # data export
-output_path: 'data/plastics/output/alternative_extrapolation'
+output_path: 'data/plastics/output/alternative_extrapolation_indvRegion'
 docs_path: 'docs/plastics'
 do_export:
   pickle: False

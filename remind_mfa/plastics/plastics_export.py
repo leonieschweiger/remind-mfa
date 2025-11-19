@@ -523,11 +523,11 @@ class PlasticsDataExporter(CommonDataExporter):
         )
 
     def export_stock(self, mfa: fd.MFASystem):
-        inflow = mfa.stocks["in_use_historic"].inflow.sum_to(("g", "h")).to_df()
+        inflow = mfa.stocks["in_use_historic"].inflow.to_df()
         inflow["variable"] = "inflow"
-        outflow = mfa.stocks["in_use_historic"].outflow.sum_to(("g", "h")).to_df()
+        outflow = mfa.stocks["in_use_historic"].outflow.to_df()
         outflow["variable"] = "outflow"
-        stock = mfa.stocks["in_use_historic"].stock.sum_to(("g", "h")).to_df()
+        stock = mfa.stocks["in_use_historic"].stock.to_df()
         stock["variable"] = "stock"
         pd.concat([inflow, outflow, stock]).to_csv(self.export_path("stock.csv"))
 
@@ -563,7 +563,7 @@ class PlasticsDataExporter(CommonDataExporter):
             self.export_eol_data_by_region_and_year(mfa=model.mfa_future)
             self.export_use_data_by_region_and_year(mfa=model.mfa_future)
             self.export_recycling_data_by_region_and_year(mfa=model.mfa_future)
-            self.export_stock_extrapolation(model=model)
+            #self.export_stock_extrapolation(model=model)
             self.export_stock(mfa=model.mfa_historic)
 
     def write_iamc(self, mfa: fd.MFASystem):

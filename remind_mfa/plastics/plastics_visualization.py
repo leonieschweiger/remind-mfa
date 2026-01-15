@@ -13,6 +13,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.colors as pc
 import plotly.express as px
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 from remind_mfa.common.common_visualization import CommonVisualizer
@@ -27,6 +29,7 @@ class PlasticsVisualizer(CommonVisualizer):
         if self.cfg.production.do_visualize:
             self.visualize_demand(mfa=model.future_mfa)
             self.compare_demand(mfa=model.future_mfa)
+            self.compare_EU_MFA(mfa=model.future_mfa)
 
         if self.cfg.extrapolation.do_visualize:
             self.visualize_extrapolation(model=model)
@@ -251,6 +254,166 @@ class PlasticsVisualizer(CommonVisualizer):
         )
         ap.plot()
         self.plot_and_save_figure(ap, "demand_validation.png", do_plot=False)
+
+    def compare_EU_MFA(self, mfa: fd.MFASystem):
+        df1 = pd.read_csv("data/plastics/input/plastics_market__end_use_stock.csv", sep=",")
+        df1["value"] = df1["value"]/1000  # convert from kt to Mt
+        mapping = pd.read_csv("data/plastics/input/EU_MFA_mapping_plastics.csv", sep=";")
+        df2 = df1.merge(
+            mapping[mapping.original_dimension == "polymers"][["original_element", "target_element"]],
+            left_on="polymer",
+            right_on="original_element",
+            how="left"
+        ).rename(columns={"target_element": "material"}).drop(columns="original_element")
+        df3 = df2.merge(
+            mapping[mapping.original_dimension == "end_use_sectors_MainSectors"][["original_element", "target_element"]],
+            left_on="sector",
+            right_on="original_element",
+            how="left"
+        ).rename(columns={"target_element": "good"}).drop(columns="original_element")
+        df_EU_MFA = df3.groupby(["region","time","material", "good"], as_index=False)["value"].sum()
+        df_REMIND_MFA = mfa.stocks["in_use"].inflow.sum_over("e").to_df().reset_index()
+        df_REMIND_MFA.columns = df_REMIND_MFA.columns.str.lower()
+        comparison = df_REMIND_MFA[df_REMIND_MFA.region=="EUR"].merge(
+            df_EU_MFA[df_EU_MFA.region=="EU27+3"], # actually EU28 is the correct match, but all values here are 0
+            on=["time", "material", "good"],
+            how="inner",
+            suffixes=("_remindmfa", "_eumfa")
+        )
+
+        df = comparison.copy()
+        # total time series
+        total = comparison.groupby(["time"])[["value_remindmfa", "value_eumfa"]].sum().reset_index()
+        plt.figure()
+        plt.plot(total.time, total.value_remindmfa, label="REMIND")
+        plt.plot(total.time, total.value_eumfa, label="EU-MFA")
+        plt.legend()
+        plt.title("Total plastics demand in EU")
+        plt.xlabel("Year")
+        plt.ylabel("Value")
+        plt.show()
+
+        # compare good splits
+        by_good = comparison.groupby(["time", "good"])[["value_remindmfa", "value_eumfa"]].sum().reset_index()
+        good_shares = by_good.merge(total, on="time", suffixes=("", "_total"))
+        good_shares["share_remindmfa"] = good_shares["value_remindmfa"] / good_shares["value_remindmfa_total"]
+        good_shares["share_eumfa"] = good_shares["value_eumfa"] / good_shares["value_eumfa_total"]
+        remind_w = by_good.pivot(index="time", columns="good", values="value_remindmfa").fillna(0)
+        eu_w = by_good.pivot(index="time", columns="good", values="value_eumfa").fillna(0)
+        remind_ws = good_shares.pivot(index="time", columns="good", values="share_remindmfa").fillna(0)
+        eu_ws = good_shares.pivot(index="time", columns="good", values="share_eumfa").fillna(0)
+
+        # stacked area plot
+        fig, axes = plt.subplots(1, 2, figsize=(14,6), sharey=True)
+        axes[0].stackplot(remind_ws.index, remind_ws.T)
+        axes[0].set_title("REMIND-MFA")
+        axes[0].set_xlabel("Time")
+        axes[0].set_ylabel("Good share")
+        axes[1].stackplot(eu_ws.index, eu_ws.T)
+        axes[1].set_title("EU-MFA")
+        axes[1].set_xlabel("Time")
+        # Shared legend
+        axes[1].legend(remind_ws.columns, loc="upper left", bbox_to_anchor=(1,1), title="Good")
+        plt.tight_layout()
+        plt.show()
+
+        # compare material splits
+        material_shares = df.merge(by_good, on=["time","good"], suffixes=("", "_total"))
+        material_shares["share_remindmfa"] = material_shares["value_remindmfa"] / material_shares["value_remindmfa_total"]
+        material_shares["share_eumfa"] = material_shares["value_eumfa"] / material_shares["value_eumfa_total"]
+        
+        # material splits are practially constant over time for EU-MFA (and they are constant for REMIND-MFA)
+        goods = sorted(df["good"].unique())
+        materials = sorted(df["material"].unique())
+        ncols = 3
+        nrows = int(np.ceil(len(goods) / ncols))
+        fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows), sharex=True, sharey=True)
+        axes = axes.flatten()
+        for ax, good in zip(axes, goods):
+            sub = material_shares[material_shares["good"] == good]
+            eu_ws = sub.pivot(index="time", columns="material", values="share_eumfa").fillna(0)
+
+            ax.stackplot(eu_ws.index, eu_ws.T)
+            ax.set_title(good)
+            ax.set_xlabel("Time")
+            ax.set_ylabel("Material share")
+        # One legend for all panels
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, title="Material", loc="upper right")
+        plt.tight_layout(rect=[0, 0, 0.95, 1])
+        plt.show()
+
+        # compare material splits for 2019
+        remind_w = material_shares[material_shares.time==2019].pivot(index="good", columns="material", values="share_remindmfa").fillna(0)
+        eu_w = material_shares[material_shares.time==2019].pivot(index="good", columns="material", values="share_eumfa").fillna(0)
+        materials = sorted(set(remind_w.columns).union(eu_w.columns))
+        remind_w = remind_w.reindex(columns=materials, fill_value=0)
+        eu_w     = eu_w.reindex(columns=materials, fill_value=0)
+        x = np.arange(len(remind_w.index))
+        width = 0.4
+        fig, ax = plt.subplots(figsize=(12,6))
+        # define a color for each material
+        colors = cm.tab20(np.linspace(0, 1, len(materials)))
+        color_map = dict(zip(materials, colors))
+        bottom_r = np.zeros(len(x))
+        bottom_e = np.zeros(len(x))
+        for mat in materials:
+            ax.bar(x - width/2, remind_w[mat], width, bottom=bottom_r, color=color_map[mat])
+            ax.bar(x + width/2, eu_w[mat],     width, bottom=bottom_e, color=color_map[mat])
+            bottom_r += remind_w[mat].values
+            bottom_e += eu_w[mat].values
+        ax.set_xticks(x)
+        ax.set_xticklabels(remind_w.index, rotation=45, ha="right")
+        ax.set_ylabel("Material share")
+        ax.set_title("Material splits by good – 2019\nREMIND-MFA (left) vs EU-MFA (right)")
+        # legend
+        handles = [plt.Rectangle((0,0),1,1,color=color_map[m]) for m in materials]
+        ax.legend(handles, materials, title="Material", bbox_to_anchor=(1,1))
+        plt.tight_layout()
+        plt.show()
+
+        # ratio heatmap
+        comparison["ratio"] = comparison["value_remindmfa"] / comparison["value_eumfa"]
+        pivot = (
+            comparison
+            .groupby(["material", "good"])["ratio"]
+            .median()
+            .unstack()
+        )
+
+        plt.figure(figsize=(10,6))
+        plt.imshow(pivot, aspect="auto")
+        plt.colorbar(label="REMIND / EU")
+        plt.yticks(range(len(pivot.index)), pivot.index)
+        plt.xticks(range(len(pivot.columns)), pivot.columns, rotation=90)
+        plt.title("Median ratio by material & good")
+        plt.show()
+
+        # compare time series
+        goods = sorted(df["good"].unique())
+        materials = sorted(df["material"].unique())
+        ncols = 3
+        nrows = int(np.ceil(len(goods) / ncols))
+        fig, axes = plt.subplots(nrows, ncols, figsize=(5*ncols, 4*nrows), sharex=True, sharey=True)
+        axes = axes.flatten()
+        for ax, good in zip(axes, goods):
+            sub = df[df["good"] == good]
+
+            for mat in materials:
+                msub = sub[sub["material"] == mat]
+                if len(msub) == 0:
+                    continue
+
+                ax.plot(msub.time, msub.value_remindmfa, label=mat, linestyle='solid')
+                ax.plot(msub.time, msub.value_eumfa, label=mat, linestyle='dashed')
+            ax.set_title(good)
+            ax.set_xlabel("Year")
+            ax.set_ylabel("Demand [Mt]")
+        # One legend for all panels
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, title="Material", loc="upper right")
+        plt.tight_layout(rect=[0, 0, 0.95, 1])
+        plt.show()
 
     def visualize_use_stock(self, mfa: fd.MFASystem, subplots_by_good=False):
         subplot_dim = "Good" if subplots_by_good else None

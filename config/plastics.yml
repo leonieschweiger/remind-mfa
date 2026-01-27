@@ -9,7 +9,7 @@ input:
 
 model_switches:
   scenario: 'SSP2'
-  stock_extrapolation_class_name: 'TwoPredictorGompertzExtrapolation'
+  stock_extrapolation_class_name: 'TwoPredictorLogisticExtrapolation'
   regress_over: 'loggdppc_time'
   lifetime_model_name: 'LogNormalLifetime'
   do_stock_extrapolation_by_category: True
@@ -53,7 +53,7 @@ visualization:
     do_visualize: False
 
 export:
-  do_export: False
+  do_export: True
   path: 'data/plastics/output/export'
   pickle:
     do_export: True
@@ -64,5 +64,5 @@ export:
   assumptions:
     do_export: True
   docs:
-    do_export: True
+    do_export: False
     path: 'docs/plastics'

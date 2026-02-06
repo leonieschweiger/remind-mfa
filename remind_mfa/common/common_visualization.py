@@ -149,7 +149,7 @@ class CommonVisualizer(RemindMFABaseModel):
 
         self.plot_and_save_figure(
             ap_scatter_stock,
-            f"stocks_global_by_region{'_per_capita' if per_capita else ''}.png",
+            f"stocks_global_by_region{'_and_' + subplot_dim if subplot_dim else ''}{'_per_capita' if per_capita else ''}.png",
             do_plot=False,
         )
 
@@ -314,5 +314,5 @@ class CommonVisualizer(RemindMFABaseModel):
         plt.tight_layout()
 
         plt.plot()
-        plt.show()
         plt.savefig(self.figure_path("Functions_gdp_time.png"))
+        plt.show()

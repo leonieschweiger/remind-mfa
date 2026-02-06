@@ -32,6 +32,8 @@ class ModelSwitches(RemindMFABaseModel):
     """Class name of the lifetime model subclass to use for the in-use stock."""
     do_stock_extrapolation_by_category: bool = False
     """Whether to perform stock extrapolation by good category."""
+    regional_stock_saturation_levels: bool = False
+    """Whether to fit regional saturation levels (instead of global) for stock extrapolation. Only implemented in two-predictor logistic extrapolation."""
     regress_over: RegressOverModes
     """Variable to use as a predictor for stock extrapolation."""
     parameter_extrapolation: Optional[dict[str, str]] = None

@@ -245,24 +245,27 @@ class LogisticExtrapolation(Extrapolation):
 class TwoPredictorLogisticExtrapolation(Extrapolation):
     """
     Two-predictor logistic-style extrapolation:
-    model: A * f_x1(x1; k_x1, x1_0) * f_x2(x2; k_x2, x2_0)
-    Prm order: [saturation_level (A), k_x1, x1_0, k_x2, x2_0]
+    model: A * alpha[r] * f_x1(x1; k_x1, x1_0) * f_x2(x2; k_x2, x2_0)
+    Prm order: [saturation_level (A), k_x1, x1_0, k_x2, x2_0, alpha[r]]
     """
 
-    prm_names: list[str] = ["saturation_level", "x1_stretch_factor", "x1_offset", "x2_stretch_factor", "x2_offset"]
+    prm_names: list[str] = ["saturation_level", "x1_stretch_factor", "x1_offset", "x2_stretch_factor", "x2_offset", "alpha"]
 
     def func(self, x: np.ndarray, prms: np.ndarray) -> np.ndarray:
         """
-        x : structured array with fields 'x1' and 'x2'
+        x : structured array with fields 'x1', 'x2' and 'region'
         """
         A, k_x1, x1_0, k_x2, x2_0 = prms[:5]
         x1 = x['x1']
         x2 = x['x2']
         assert x2 is not None, "TwoPredictorLogisticExtrapolation requires a secondary predictor"
 
+        r = x["region"]
+        alpha = prms[5:]
+        
         f_x1 = 1.0 / (1.0 + np.exp(-k_x1 * (x1 - x1_0)))
         f_x2 = 1.0 / (1.0 + np.exp(-k_x2 * (x2 - x2_0)))
-        return A * f_x1 * f_x2
+        return A * alpha[r] * f_x1 * f_x2
 
     def initial_guess(
         self,
@@ -271,7 +274,7 @@ class TwoPredictorLogisticExtrapolation(Extrapolation):
     ) -> np.ndarray:
         max_level = np.max(data_to_extrapolate)
         sat_level_guess = 2.0 * max_level
-
+        
         mean_x1 = np.mean(predictor_values['x1'][: self.n_historic, ...])
         max_x1 = np.max(predictor_values['x1'][: self.n_historic, ...])
         k_x1_guess = 2.0 / (max_x1 - mean_x1)
@@ -280,7 +283,9 @@ class TwoPredictorLogisticExtrapolation(Extrapolation):
         max_x2 = np.max(predictor_values['x2'][: self.n_historic, ...])
         k_x2_guess = 2.0 / (max_x2 - mean_x2)
 
-        return np.array([sat_level_guess, k_x1_guess, mean_x1, k_x2_guess, mean_x2])
+        n_regions = len(np.unique(predictor_values['region']))
+
+        return np.array([sat_level_guess, k_x1_guess, mean_x1, k_x2_guess, mean_x2]+n_regions*[1.0])
 
 
 class TwoPredictorGompertzExtrapolation(Extrapolation):

@@ -173,9 +173,14 @@ class StockExtrapolation:
         elif self.cfg.regress_over == RegressOverModes.LOGGDPPC_TIME:
             time = np.array(self.dims["t"].items)
             time = broadcast_trailing_dimensions(time, gdppc)
-            predictor = np.empty(gdppc.shape, dtype=[('x1', np.float64), ('x2', np.float64)])
+            predictor = np.empty(gdppc.shape, dtype=[('x1', np.float64), ('x2', np.float64), ('region', np.int32)])
             predictor['x1'] = np.log10(gdppc)
             predictor['x2'] = time
+            if self.cfg.regional_stock_saturation_levels == True:
+                codes = np.arange(historic_in.shape[1])
+                codes = np.expand_dims(codes, axis=0)   # (1,12)
+                codes = np.expand_dims(codes, axis=-1)  # (1,12,1)
+                predictor['region'] = broadcast_trailing_dimensions(codes, gdppc)
             if self.cfg.stock_extrapolation_class_name == 'TwoPredictorGompertzExtrapolation':
                 """
                 Predictors are scaled and centered to avoid numerical issues during extrapolation.

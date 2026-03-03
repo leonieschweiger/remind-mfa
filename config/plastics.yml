@@ -54,7 +54,7 @@ visualization:
         #- "good_market"
       exclude_flows: [ ]
   flows:
-    do_visualize: True
+    do_visualize: False
 
 export:
   do_export: False

@@ -30,7 +30,7 @@ class PlasticsModel(CommonModel):
     # TODO: unify, then delete
     end_use_good_letter: str = "g"
     historic_stock_name: str = "in_use_historic"
-    stock_projection_saturation_level: int = 3 #TODO replace this first guess
+    #stock_projection_saturation_level: int = 3 #TODO replace this first guess
 
     def modify_parameters(self):
         # copy/rename for use in common model
@@ -59,19 +59,33 @@ class PlasticsModel(CommonModel):
             dims=self.dims[indep_fit_dim_letters],
         )
         # get saturation levels
+        # set growth rate bounds to ensure that extrapolation is increasing (not decreasing)
         growth_rate_bound_gdp = Bound(
-                var_name="x1_growth_rate",
-                lower_bound=fd.FlodymArray.full_like(arr, 0.),
-                upper_bound=fd.FlodymArray.full_like(arr, np.inf),
-            )
+            var_name="x1_growth_rate",
+            lower_bound=fd.FlodymArray.full_like(arr, 0.1),
+            upper_bound=fd.FlodymArray.full_like(arr, np.inf),
+        )
         growth_rate_bound_time = Bound(
             var_name="x2_growth_rate",
-            lower_bound=fd.FlodymArray.full_like(arr, 0.),
+            lower_bound=fd.FlodymArray.full_like(arr, 0.1),
+            upper_bound=fd.FlodymArray.full_like(arr, np.inf),
+        )
+        # set offset bounds to ensure that inflection point of common regression is within the historic period
+        gdp_max = (np.log10(np.max(self.parameters["gdppc"][self.dims["h"].items[-1]].values)) - np.mean(np.log10(self.parameters["gdppc"].values)))/np.std(np.log10(self.parameters["gdppc"].values))
+        time_max = (self.dims["h"].items[-1] - np.mean(self.dims["t"].items))/np.std(self.dims["t"].items)
+        offset_bound_gdp = Bound(
+            var_name="x1_offset",
+            lower_bound=fd.FlodymArray.full_like(arr, -gdp_max),
+            upper_bound=fd.FlodymArray.full_like(arr, np.inf),
+        )
+        offset_bound_time = Bound(
+            var_name="x2_offset",
+            lower_bound=fd.FlodymArray.full_like(arr, -time_max),
             upper_bound=fd.FlodymArray.full_like(arr, np.inf),
         )
         bound_list_obj = BoundList(
             target_dims=self.dims[self.end_use_good_letter,],
-            bound_list=[growth_rate_bound_gdp, growth_rate_bound_time],
+            bound_list=[growth_rate_bound_gdp, growth_rate_bound_time, offset_bound_gdp, offset_bound_time],
         )
         historic_stocks = self.historic_mfa.stocks["in_use_historic"].stock
         self.stock_handler_0 = StockExtrapolation(
@@ -90,4 +104,4 @@ class PlasticsModel(CommonModel):
         self.stock_handler_0.get_pure_regression()
         sat_idx = self.stock_handler_0.extrapolation.prm_names.index('saturation_level')
         sat_levels = self.stock_handler_0.extrapolation._fit_prms[:, sat_idx]
-
+        self.stock_projection_saturation_level = sat_levels.sum()

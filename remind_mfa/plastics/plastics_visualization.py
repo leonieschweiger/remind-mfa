@@ -31,7 +31,7 @@ class PlasticsVisualizer(CommonVisualizer):
             self.visualize_extrapolation(model=model, subplot_dim="Region")
             self.visualize_extrapolation(model=model, subplot_dim="Good", linecolor_dim="Region")
             self.visualize_extrapolation(model=model, subplot_dim="Region", linecolor_dim="Good")
-            self.visualize_extrapolation_functions(model=model, stock_handler=model.stock_handler)
+            self.visualize_extrapolation_functions(model=model, stock_handler=model.stock_handler_0)
 
         if self.cfg.flows.do_visualize:
             primary_production = (

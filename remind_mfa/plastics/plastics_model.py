@@ -53,3 +53,41 @@ class PlasticsModel(CommonModel):
     def transfer_historic_parameters(self):
         # get material split of stock inflow from historic MFA to be extrapolated by ParameterExtrapolation for use in future MFA
         self.parameters["material_shares_use_inflow"] = self.historic_mfa.parameters["material_shares_use_inflow"]
+
+        indep_fit_dim_letters = ("g",)
+        arr = fd.FlodymArray(
+            dims=self.dims[indep_fit_dim_letters],
+        )
+        # get saturation levels
+        growth_rate_bound_gdp = Bound(
+                var_name="x1_growth_rate",
+                lower_bound=fd.FlodymArray.full_like(arr, 0.),
+                upper_bound=fd.FlodymArray.full_like(arr, np.inf),
+            )
+        growth_rate_bound_time = Bound(
+            var_name="x2_growth_rate",
+            lower_bound=fd.FlodymArray.full_like(arr, 0.),
+            upper_bound=fd.FlodymArray.full_like(arr, np.inf),
+        )
+        bound_list_obj = BoundList(
+            target_dims=self.dims[self.end_use_good_letter,],
+            bound_list=[growth_rate_bound_gdp, growth_rate_bound_time],
+        )
+        historic_stocks = self.historic_mfa.stocks["in_use_historic"].stock
+        self.stock_handler_0 = StockExtrapolation(
+            cfg=self.cfg.model_switches,
+            historic_stocks=historic_stocks,
+            dims=self.dims,
+            parameters=self.parameters,
+            target_dim_letters="all",
+            indep_fit_dim_letters=(self.end_use_good_letter,),
+            bound_list=bound_list_obj,
+        )
+        self.stock_handler_0.set_dims(indep_fit_dim_letters)
+        self.stock_handler_0.init_arrays()
+        self.stock_handler_0.calc_arrays_from_parameters_dict()
+        self.stock_handler_0.set_predictor()
+        self.stock_handler_0.get_pure_regression()
+        sat_idx = self.stock_handler_0.extrapolation.prm_names.index('saturation_level')
+        sat_levels = self.stock_handler_0.extrapolation._fit_prms[:, sat_idx]
+

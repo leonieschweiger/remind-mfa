@@ -92,10 +92,17 @@ class StockFitter(RemindMFABaseModel):
             x0=prms_0,
             tol=0.001,
         )
-        if result.success:
-            return result.x
-        else:
-            raise RuntimeError(f"Optimization failed: {result.message}")
+        if not result.success:
+            # Retry without analytical Jacobian (let scipy estimate numerically)
+            result = minimize(
+                fun=lambda prms: self.penalty(historic, predictor, prms, prms_0),
+                x0=prms_0,
+                tol=0.001,
+            )
+        if not result.success:
+            import logging
+            logging.warning(f"Optimization did not converge: {result.message}. Using best result.")
+        return result.x
 
     def penalty(
         self, historic: np.ndarray, predictor: np.ndarray, prms: np.ndarray, prms_0: np.ndarray
@@ -251,37 +258,41 @@ class StockFitter(RemindMFABaseModel):
         return dfunc / dtime
 
     def calc_log_ratio(self, fit, target):
-        """Log ratio of fit to target, both shifted up by eps to avoid log(0).
-        Uses max(val, 0) + eps so negative values are treated as zero.
-        Capped at ±1 to limit the influence of extreme deviations.
+        """Log ratio of fit to target, both regularized by eps to avoid log(0) or division by zero.
+        Capped at ±max_log to limit the influence of extreme deviations.
+        Works for both scalars and arrays.
         """
-        eps = 1e-3 # insensitive to exact value
-        max_log = 1 # = ln(e), with e the maximum ratio of fit to target.
-        if np.sign(fit) != np.sign(target):
-            return np.sign(fit - target) * max_log
-        fit_reg = max(fit, 0.0) + eps
-        target_reg = max(target, 0.0) + eps
-        return np.clip(np.log(fit_reg / target_reg), -max_log, max_log)
+        eps = 1e-3
+        max_log = 1.0
+        fit_reg = np.abs(fit) + eps
+        target_reg = np.abs(target) + eps
+        log_ratio = np.log(fit_reg / target_reg)
+        # If signs disagree, push to maximum penalty
+        sign_mismatch = np.sign(fit) * np.sign(target) < 0
+        log_ratio = np.where(sign_mismatch, np.sign(fit - target) * max_log, log_ratio)
+        return np.clip(log_ratio, -max_log, max_log)
 
     def calc_dlog_ratio_dfit(self, fit, target):
         """Derivative of calc_log_ratio(fit, target) w.r.t. fit.
-        Mirrors the logic of calc_log_ratio using max(val, 0) + eps regularization:
-        - Small nudge towards target for sign mismatch (not mathematically exact, helps optimizer).
-        - Zero for fit <= 0 (d(max(fit,0)+eps)/d(fit) = 0 for fit <= 0).
-        - Small nudge back into unclipped region at the clip boundary (not mathematically exact).
-        - Otherwise 1 / (fit + eps), i.e. d(log(fit_reg/target_reg))/d(fit).
+        Mirrors the regularization of calc_log_ratio.
+        Returns a small nudge (not exact) at boundaries and sign-mismatch regions
+        to help the optimizer escape.
         """
-        eps = 1e-3 # insensitive to exact value
-        max_log = 1  # = ln(e), with e the maximum ratio of fit to target.
-        if np.sign(fit) != np.sign(target):
-            # nudge fit towards target (not mathematically exact, helps optimizer escape flat region)
-            return -eps * np.sign(fit - target)
-        if fit <= 0.0:
-            # In this case, target is also <= 0
-            return 0.0
-        fit_reg = fit + eps
-        target_reg = max(target, 0.0) + eps
-        if np.log(fit_reg / target_reg) >= max_log:
-            # nudge back into unclipped region (not mathematically exact)
-            return -eps * np.sign(np.log(fit_reg / target_reg))
-        return 1.0 / fit_reg
+        eps = 1e-3
+        max_log = 1.0
+        fit_reg = np.abs(fit) + eps
+        target_reg = np.abs(target) + eps
+        log_ratio = np.log(fit_reg / target_reg)
+
+        # Normal case: d/d(fit) [log((|fit|+eps) / (|target|+eps))] = sign(fit) / (|fit| + eps)
+        deriv = np.sign(fit) / fit_reg
+
+        # At clipping boundaries, use small nudge back towards un-clipped region
+        clipped = np.abs(log_ratio) >= max_log
+        deriv = np.where(clipped, -eps * np.sign(log_ratio), deriv)
+
+        # At sign mismatch, use small nudge towards target
+        sign_mismatch = np.sign(fit) * np.sign(target) < 0
+        deriv = np.where(sign_mismatch, -eps * np.sign(fit - target), deriv)
+
+        return deriv

@@ -335,18 +335,23 @@ class GompertzExtrapolation(Extrapolation):
         x : structured array with fields 'x1' and 'x2'
         """
         a, b, c = prms[:3]
-        return a * np.exp(-np.exp(-c * (x + b)) * np.log(2))
+        # Clip the inner exponent to avoid overflow in exp()
+        inner = -c * (x + b)
+        inner = np.clip(inner, -500, 500)
+        return a * np.exp(-np.exp(inner) * np.log(2))
 
     def jacobian(self, x: np.ndarray, prms: np.ndarray) -> np.ndarray:
         a, b, c = prms[:3]
         f = self.func(x, prms)
-        if f == 0:
-            return np.zeros(3)
-        # Use log(f/a) = -exp(-c*(x+b))*log(2) to avoid intermediate overflow
-        log_f_over_a = np.log(f / a)
-        da = f / a
-        db = -f * c * log_f_over_a
-        dc = -f * (x + b) * log_f_over_a
+        # Guard against f=0 or f/a<=0 which would make log undefined
+        eps = 1e-30
+        f_safe = np.where(np.abs(f) < eps, eps, f)
+        a_safe = a if np.abs(a) > eps else eps
+        # log_f_over_a = -exp(-c*(x+b))*log(2), using log(f/a) avoids intermediate overflow
+        log_f_over_a = np.log(np.abs(f_safe / a_safe))
+        da = f_safe / a_safe
+        db = -f_safe * c * log_f_over_a
+        dc = -f_safe * (x + b) * log_f_over_a
         return np.stack([da, db, dc], axis=-1)
 
     def initial_guess(
@@ -384,8 +389,10 @@ class TwoPredictorGompertzExtrapolation(TwoPredictorExtrapolation):
         x1, x2 = x["x1"], x["x2"]
 
         f1 = np.ones_like(x1) * a
-        f2 = np.exp(-np.exp(-c_x1 * (x1 + b_x1)) * np.log(2))
-        f3 = np.exp(-np.exp(-c_x2 * (x2 + b_x2)) * np.log(2))
+        inner_x1 = np.clip(-c_x1 * (x1 + b_x1), -500, 500)
+        inner_x2 = np.clip(-c_x2 * (x2 + b_x2), -500, 500)
+        f2 = np.exp(-np.exp(inner_x1) * np.log(2))
+        f3 = np.exp(-np.exp(inner_x2) * np.log(2))
         factors = {"f1": f1, "f2": f2, "f3": f3}
         return self.selective_product(factor, factors)
 

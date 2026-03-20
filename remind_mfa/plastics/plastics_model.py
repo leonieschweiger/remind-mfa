@@ -40,7 +40,10 @@ class PlasticsModel(CommonModel):
         sat_bound = Bound(
             var_name="saturation_level",
             lower_bound=fd.FlodymArray(dims=self.dims[indep_fit_dim_letters]),
-            upper_bound=np.max(stock_pc.values, axis=(stock_pc.dims.index("h"),stock_pc.dims.index("r"))) * 1.2,
+            upper_bound=np.max(
+                stock_pc.values, axis=(stock_pc.dims.index("h"), stock_pc.dims.index("r"))
+            )
+            * 1.2,
             dims=self.dims[indep_fit_dim_letters],
         )
         lower_bound = fd.FlodymArray(dims=self.dims[indep_fit_dim_letters])
@@ -88,7 +91,7 @@ class PlasticsModel(CommonModel):
         # )
         bound_list = BoundList(
             bound_list=[
-                #sat_bound,
+                # sat_bound,
                 offset_bound_gdp,
                 offset_bound_time,
                 #growth_rate_bound_gdp,

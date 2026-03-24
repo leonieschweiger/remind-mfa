@@ -194,13 +194,15 @@ class CommonModel:
             )
             time = np.array(self.dims["t"].items)
             lifetime = self.limit_lifetime()  # shape (g, r)
+            # these are the parameters for a Gompertz function that reaches 20% saturation in 1950 and 80% in 2020
+            #b = -1980.05
+            #c = 0.02797
+            b, c = self._compute_gompertz_params(x1=1950, f1=0.1, x2=2020, f2=0.8)
             for r in self.dims["r"].items:
                 for g in self.dims[self.end_use_good_letter].items:
-                    # these are the parameters for a Gompertz function that reaches 20% saturation in 1950 and 80% in 2020
-                    # shifted by the lifetimes, so goods with longer lifetimes reach saturation later
+                    # b is shifted by the lifetimes, so goods with longer lifetimes reach saturation later
                     lt = lifetime[{"r": r, self.end_use_good_letter: g}].values.item()
-                    b = -1980.05 - lt
-                    prms = [1, b, 0.02797]
+                    prms = [1, b - lt, c]
                     time_factor[{"r": r, self.end_use_good_letter: g}] = GompertzExtrapolation.func(
                         None, time, prms
                     )
@@ -293,3 +295,32 @@ class CommonModel:
         """Effective lifetime when saturation level is reached.
         Currently, this is just the last modelled lifetime."""
         return self.parameters["lifetime_mean"][{"t": self.dims["t"].items[-1]}]
+
+    @staticmethod
+    def _compute_gompertz_params(x1, f1, x2, f2):
+        """
+        Compute Gompertz parameters b (offset) and c (growth_rate) from two saturation points.
+        
+        Args:
+            x1: First x value (e.g., year 1950)
+            f1: Saturation fraction at x1 (e.g., 0.2 for 20%)
+            x2: Second x value (e.g., year 2020)
+            f2: Saturation fraction at x2 (e.g., 0.8 for 80%)
+        
+        Returns:
+            (b, c): offset and growth_rate parameters for Gompertz function
+        """
+        ln2 = np.log(2)
+        
+        # From f = a * exp(-exp(-c*(x+b)) * ln(2)), solve for inner exponent
+        exp_term_1 = -np.log(f1) / ln2
+        exp_term_2 = -np.log(f2) / ln2
+        
+        log_exp_1 = np.log(exp_term_1)
+        log_exp_2 = np.log(exp_term_2)
+        
+        # Solve linear system for c and b
+        c = -(log_exp_1 - log_exp_2) / (x1 - x2)
+        b = -(log_exp_1 + c*x1) / c
+        
+        return b, c

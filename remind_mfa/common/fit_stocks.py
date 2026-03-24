@@ -162,19 +162,16 @@ class StockFitter(RemindMFABaseModel):
 
     def pen_data_0th_order(self, historic, predictor, prms, relative=False):
         """penalty for the absolute deviation of the fitted function from the last historic data
-        points.
-        When relative=True, uses log-space penalty log(fit/target) which is equivalent to
-        relative error for small deviations but numerically stable for very small values.
+        points
         """
         last_x = self.last_hist(predictor)
         fit = self.extrapolation.func(last_x, prms)
         target = self.last_hist(historic)
+        diff = fit - target
         if relative:
-            eps = 1e-30
-            diff = np.log(max(fit, eps)) - np.log(max(target, eps))
+            diff /= max(target, 1e-6)
             prefix = "rel_"
         else:
-            diff = fit - target
             prefix = ""
         return self.norm(diff) * self.penalty_weights[f"{prefix}data_0th_order"]
 
@@ -187,21 +184,16 @@ class StockFitter(RemindMFABaseModel):
         return self.norm((fit_slope - target_slope)) * self.penalty_weights["data_1st_order"]
 
     def dpen_data_0th_order(self, historic, predictor, prms, relative=False):
-        """derivative of pen_data_0th_order with respect to prms.
-        When relative=True, uses log_jacobian (d(log f)/d(prms)) which is numerically
-        stable even when f ≈ 0, avoiding the vanishing-gradient problem.
-        """
+        """derivative of pen_data_0th_order with respect to prms"""
         last_x = self.last_hist(predictor)
         fit = self.extrapolation.func(last_x, prms)
+        dfit = self.extrapolation.jacobian(last_x, prms)
         target = self.last_hist(historic)
+        diff = fit - target
         if relative:
-            eps = 1e-30
-            diff = np.log(max(fit, eps)) - np.log(max(target, eps))
-            dfit = self.extrapolation.log_jacobian(last_x, prms)
+            diff /= max(target, 1e-2) ** 2
             prefix = "rel_"
         else:
-            diff = fit - target
-            dfit = self.extrapolation.jacobian(last_x, prms)
             prefix = ""
         return self.dnorm(diff) * dfit * self.penalty_weights[f"{prefix}data_0th_order"]
 

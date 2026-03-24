@@ -96,6 +96,15 @@ class Extrapolation(RemindMFABaseModel):
         """gets either one-dimensional or multi-dimensional data, but always returns one scalar value per prm"""
         pass
 
+    def jacobian(self, x: np.ndarray, prms: np.ndarray) -> np.ndarray:
+        """Derivative of func w.r.t. prms. Override in subclasses for analytical Jacobian."""
+        raise NotImplementedError(f"jacobian not implemented for {type(self).__name__}")
+
+    def log_jacobian(self, x: np.ndarray, prms: np.ndarray) -> np.ndarray:
+        """Derivative of log(func) w.r.t. prms. Override in subclasses for numerically stable
+        log-space Jacobian. """
+        raise NotImplementedError(f"log_jacobian not implemented for {type(self).__name__}")
+
     def get_fitting_function(
         self,
         predictor_values: np.ndarray,
@@ -351,6 +360,25 @@ class GompertzExtrapolation(Extrapolation):
         db = -f * c * log_f_over_a
         dc = -f * (x + b) * log_f_over_a
         return np.stack([da, db, dc], axis=-1)
+
+    def log_jacobian(self, x: np.ndarray, prms: np.ndarray) -> np.ndarray:
+        """Derivative of log(f) w.r.t. prms, computed directly in log-space.
+
+        For Gompertz f = a * exp(-exp(-c*(x+b)) * ln2):
+            log(f) = log(a) - exp(-c*(x+b)) * ln2
+            d(log f)/da = 1/a
+            d(log f)/db = c * exp(-c*(x+b)) * ln2
+            d(log f)/dc = (x+b) * exp(-c*(x+b)) * ln2
+
+        Unlike (1/f)*jacobian, these are numerically stable even when f ≈ 0.
+        """
+        a, b, c = prms[:3]
+        exp_term = np.exp(np.clip(-c * (x + b), -500, 500))
+        ln2 = np.log(2)
+        d_log_f_da = 1.0 / a
+        d_log_f_db = c * exp_term * ln2
+        d_log_f_dc = (x + b) * exp_term * ln2
+        return np.stack([d_log_f_da, d_log_f_db, d_log_f_dc], axis=-1)
 
     def initial_guess(
         self,

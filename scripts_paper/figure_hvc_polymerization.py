@@ -190,7 +190,7 @@ fig.update_layout(
     template="plotly_white",
     width=1100,
     height=380 * n_rows,
-    title_text=f"HVC demand by region",
+    title_text=f"HVC production by region",
     title_x=0.5,
     font={"size": 12},
     margin={"l": 60, "r": 200, "t": 80, "b": 60},

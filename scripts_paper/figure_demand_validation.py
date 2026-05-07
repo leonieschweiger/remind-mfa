@@ -99,8 +99,8 @@ for i, source in enumerate(sources):
 # ── layout ────────────────────────────────────────────────────────────────────
 fig.update_layout(
     template="plotly_white",
-    width=800,
-    height=500,
+    width=960,
+    height=540,
     xaxis={"title": "Year", "range": [1950, 2100]},
     yaxis={"title": "Global plastics demand [Mt/yr]"},
     legend={"title": "Source", "x": 0.02, "y": 0.98, "xanchor": "left", "yanchor": "top"},

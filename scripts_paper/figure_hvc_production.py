@@ -1,4 +1,5 @@
-"""Figure: HVC input to polymerization flow by region."""
+"""Plot HVC production projections by IEA used in REMIND vs. HVC demand from REMIND-MFA.
+Since HVC demand from REMIND-MFA is only for plastics, it is divided by 0.88 to get total HVC demand (based on Levi and Cullen, 2021). """
 
 import pathlib
 import pickle
@@ -16,7 +17,7 @@ from constants import (
 RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-07--10-11-54"
 FLOW_NAME = "HVC_input => polymerization"
 INPUT_DIR = pathlib.Path("data/plastics/input")
-OUTPUT_PATH = pathlib.Path(__file__).with_name("figure_hvc_polymerization.png")
+OUTPUT_PATH = pathlib.Path(__file__).with_name("figure_hvc_production.png")
 
 # ── load model output ─────────────────────────────────────────────────────────
 pickle_path = PATH_PLASTICS / f"{RUN_PLASTICS}.pickle"
@@ -188,12 +189,12 @@ for i, region in enumerate(regions):
 
 fig.update_layout(
     template="plotly_white",
-    width=1100,
-    height=380 * n_rows,
+    width=1280,
+    height=220 * n_rows,
     title_text=f"HVC production by region",
     title_x=0.5,
     font={"size": 12},
-    margin={"l": 60, "r": 200, "t": 80, "b": 60},
+    margin={"l": 50, "r": 180, "t": 60, "b": 50},
     legend={"x": 1.01, "y": 1, "xanchor": "left"},
 )
 

@@ -179,15 +179,15 @@ for i, region in enumerate(regions):
 
 fig.update_layout(
     template="plotly_white",
-    width=1200,
-    height=400 * n_rows,
+    width=1280,
+    height=220 * n_rows,
     title_text=(
         "<b>Chemical material value flows (T$)</b>"
     ),
     title_x=0.5,
     font={"size": 11},
     legend={"x": 1.01, "y": 1, "xanchor": "left", "tracegroupgap": 4},
-    margin={"l": 60, "r": 210, "t": 90, "b": 60},
+    margin={"l": 50, "r": 180, "t": 70, "b": 50},
 )
 
 fig.write_image(

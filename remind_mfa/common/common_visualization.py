@@ -325,7 +325,7 @@ class CommonVisualizer(RemindMFABaseModel):
 
             self.plot_and_save_figure(
                 ap,
-                f"regression_function_{factor_name}_{regional_str}",
+                f"regression_function_{factor_name}_{regional_str}.png",
                 do_plot=False,
             )
 

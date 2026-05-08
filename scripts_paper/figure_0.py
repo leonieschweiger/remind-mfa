@@ -143,6 +143,7 @@ for iso in isos:
 
     stock_handler = model.stock_handler
     sat_level = model.sector_specific_sat_level
+    time_factor = model.time_factor
 
     if not hasattr(stock_handler, "pure_regression"):
         raise AttributeError(
@@ -151,7 +152,7 @@ for iso in isos:
         )
 
     def _to_region_df(stock_pc_array):
-        region_series = (stock_pc_array * sat_level).sum_to(("t", "r"))
+        region_series = (stock_pc_array * sat_level * time_factor).sum_to(("t", "r"))
         return region_series[{"r": extrapolated_region_code}].to_df().reset_index()
 
     pure_df = _to_region_df(stock_handler.pure_regression)

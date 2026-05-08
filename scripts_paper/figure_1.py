@@ -40,7 +40,7 @@ RUN_CONFIGS = [
         directory=PATH_PLASTICS,
         label="b) Plastics",
         run_name=RUN_PLASTICS,
-        flow_name="virgin => primary_market",
+        flow_name="polymerization => primary_market",
         last_historical_year=LAST_HISTORICAL_YEAR_PLASTICS,
     ),
     RunConfig(

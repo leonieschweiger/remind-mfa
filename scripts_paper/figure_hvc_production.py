@@ -11,10 +11,10 @@ from plotly.subplots import make_subplots
 from constants import (
     LAST_HISTORICAL_YEAR_PLASTICS,
     PATH_PLASTICS,
+    RUN_PLASTICS,
     REGION_DISPLAY_NAMES,
 )
 
-RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-07--10-11-54"
 FLOW_NAME = "HVC_input => polymerization"
 INPUT_DIR = pathlib.Path("data/plastics/input")
 OUTPUT_PATH = pathlib.Path(__file__).with_name("figure_hvc_production.png")

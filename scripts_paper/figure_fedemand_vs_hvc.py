@@ -1,7 +1,7 @@
 """Figure: REMIND ue_chemicals demand vs. HVC=>polymerization flow, indexed to 2020.
 
 For each region one subplot with lines (all indexed to BASE_YEAR=1):
-  - HVC_input => polymerization (model, solid)
+  - HVC_input => polymerization (REMIND-MFA, solid)
   - ue_chemicals from f_fedemand SSP2 (dashed)
   - Methanol, Ammonia (IEA Petrochem, dotted)
   - Ethylene+Propylene+BTX sum (IEA Petrochem, dashdot)
@@ -21,10 +21,10 @@ from constants import (
     COLORS_REMIND,
     LAST_HISTORICAL_YEAR_PLASTICS,
     PATH_PLASTICS,
+    RUN_PLASTICS,
     REGION_DISPLAY_NAMES,
 )
 
-RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-07--10-11-54"
 INPUT_DIR = pathlib.Path("data/plastics/input")
 OUTPUT_PATH = pathlib.Path(__file__).with_name("figure_fedemand_vs_hvc.png")
 BASE_YEAR = 2020
@@ -124,7 +124,7 @@ fert_df["idx"] = index_to_base(fert_df)
 
 # ── series catalogue: (label, dataframe, line_kwargs, marker_symbol) ─────────
 SERIES = [
-    ("HVC→polymerization (model)",      flow_df,     {"width": 2.5},                        "circle"),
+    ("HVC demand (REMIND-MFA)",      flow_df,     {"width": 2.5},                        "circle"),
     ("ue_chemicals (f_fedemand SSP2)",   fed_df,      {"width": 2,   "dash": "dash"},        "circle-open"),
     ("Methanol (IEA)",                   methanol_df, {"width": 1.5, "dash": "dot"},         "diamond-open"),
     ("Ammonia (IEA)",                    ammonia_df,  {"width": 1.5, "dash": "dot"},         "square-open"),

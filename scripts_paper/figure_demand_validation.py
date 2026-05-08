@@ -14,9 +14,9 @@ from constants import (
     COLOR_PALETTE,
     LAST_HISTORICAL_YEAR_PLASTICS,
     PATH_PLASTICS,
+    RUN_PLASTICS
 )
 
-RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-07--10-11-54"
 VALIDATION_CSV = pathlib.Path("data/plastics/input/validation.csv")
 OUTPUT_PATH = pathlib.Path(__file__).with_name("figure_demand_validation.png")
 

@@ -182,7 +182,7 @@ fig.update_layout(
     width=1280,
     height=220 * n_rows,
     title_text=(
-        "<b>Chemical material value flows (T$)</b>"
+        "<b>Chemical flows in value added (T$)</b>"
     ),
     title_x=0.5,
     font={"size": 11},

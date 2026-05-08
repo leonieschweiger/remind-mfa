@@ -277,10 +277,9 @@ class CommonModel:
         self.stock_handler.extrapolate()
 
         # denormalize
-        self.sector_specific_sat_level = (
-            sector_specific_sat_level * time_factor
-        )  # to be used in visualization of extrapolation functions
-        long_term_stock = self.stock_handler.stocks * self.sector_specific_sat_level
+        self.time_factor = time_factor  # store for later use in visualization
+        self.sector_specific_sat_level = sector_specific_sat_level # store for later use in visualization
+        long_term_stock = self.stock_handler.stocks * self.sector_specific_sat_level * self.time_factor
 
         self.apply_scenario_factor(array=long_term_stock, scen_prm_name="stock_factor")
 

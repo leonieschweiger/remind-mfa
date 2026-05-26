@@ -6,11 +6,11 @@ PATH_PLASTICS = pathlib.Path("data/plastics/output/export/pickle")
 PATH_STEEL = pathlib.Path("data/steel/output/export/pickle")
 
 # Default runs use SSP2 unless explicitly noted otherwise.
-RUN_CEMENT = "model_cement_SSP2_h12_2026-04-29--13-20-04"
-RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-04--12-30-42"
-RUN_STEEL = "model_steel_SSP1_LD_h12_2026-04-29--13-37-27"
-RUN_STEEL_SSP1 = "model_steel_SSP1_h12_2026-04-01--14-31-04"
-RUN_STEEL_SSP1_LD = "model_steel_SSP1_LD_h12_2026-04-01--14-31-31"
+RUN_CEMENT = "model_cement_SSP2_h12_2026-05-26--15-48-57"
+RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-26--15-48-14"
+RUN_STEEL = "model_steel_SSP2_h12_2026-05-26--16-00-33"
+RUN_STEEL_SSP1 = "model_steel_SSP1_h12_2026-05-26--16-01-36"
+RUN_STEEL_SSP1_LD = "model_steel_SSP1_LD_h12_2026-05-26--15-47-00"
 
 LAST_HISTORICAL_YEAR_CEMENT = 2023
 LAST_HISTORICAL_YEAR_PLASTICS = 2019

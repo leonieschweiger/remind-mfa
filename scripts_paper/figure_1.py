@@ -33,14 +33,14 @@ RUN_CONFIGS = [
         directory=PATH_CEMENT,
         label="a) Cement",
         run_name=RUN_CEMENT,
-        flow_name="prod_cement => prod_product",
+        flow_name="prod_cement => market_cement",
         last_historical_year=LAST_HISTORICAL_YEAR_CEMENT,
     ),
     RunConfig(
         directory=PATH_PLASTICS,
         label="b) Plastics",
         run_name=RUN_PLASTICS,
-        flow_name="virgin => primary_market",
+        flow_name="polymerization => primary_market",
         last_historical_year=LAST_HISTORICAL_YEAR_PLASTICS,
     ),
     RunConfig(

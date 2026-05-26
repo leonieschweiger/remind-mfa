@@ -8,33 +8,43 @@ show_all = [
     "Local<br>production",
 ]
 stages_show = {
-    "historical": [3],
-    "growing": [0, 1, 3],
-    "shrinking": [0, 1, 3],
+    "historical": [
+        ["Local<br>demand", "Imports", "Exports", "Local<br>production"],
+    ],
+    "growing": [
+        ["Local<br>demand"],
+        ["Local<br>demand", "Imports"],
+        ["Local<br>demand", "Imports", "Exports", "Local<br>production"],
+    ],
+    "shrinking": [
+        ["Local<br>demand"],
+        ["Local<br>demand", "Imports", "Local<br>production"],
+        ["Local<br>demand", "Imports", "Exports", "Local<br>production"],
+    ],
 }
 demand_cases = ["historical", "growing", "shrinking"]
 show_labels = False
 
-for demand_case, stage in ((d, s) for d, sv in stages_show.items() for s in sv):
+for demand_case, show in ((d, s) for d, sv in stages_show.items() for s in sv):
 
-    show = show_all[0 : stage + 1]
+    stage = len(show) - 1
     # Simple illustrative trade balance around a market node.
 
     if demand_case == "historical":
-        production = 1
+        production = 2
         imports = 2
         exports = 1
-        demand = 2
+        demand = 3
     elif demand_case == "growing":
-        production = 6.56155
+        production = 4
         imports = 4
-        exports = 2.56155
-        demand = 8
+        exports = 2
+        demand = 6
     elif demand_case == "shrinking":
-        production = 1
-        imports = 0.5
-        exports = 1
-        demand = 0.5
+        production = 2
+        imports = 1
+        exports = 1.5
+        demand = 1.5
 
     height_factor = production + imports
 

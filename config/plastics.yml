@@ -55,14 +55,14 @@ visualization:
         t: 2050
         #r: 'EUR'
         #m: 'Fibres'
-        e: 'C'
+        #e: 'C'
       exclude_processes:
         - "sysenv"
         - "atmosphere"
-        - "virginfoss"
-        - "virginbio"
-        - "virgindaccu"
-        - "virginccu"
+        - "feedfoss"
+        - "feedbio"
+        - "feeddaccu"
+        - "feedccu"
         - "emission"
         - "uncontrolled"
         #- "waste_market"

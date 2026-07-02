@@ -109,9 +109,38 @@ def _build_comparison_figure(array: fd.FlodymArray, subplot_dim: str | None = No
                 col=col,
             )
 
-    fig.for_each_xaxis(lambda axis: axis.update(title_text="Year", title_standoff=4, range=X_RANGE))
-    fig.for_each_yaxis(lambda axis: axis.update(title_text="Production [Mt]", title_standoff=4))
-    fig.update_layout(template="plotly_white")
+    fig.for_each_xaxis(
+        lambda axis: axis.update(
+            title_text="Year",
+            title_standoff=4,
+            range=X_RANGE,
+            title_font={"size": 28},
+            tickfont={"size": 20},
+        )
+    )
+    fig.for_each_yaxis(
+        lambda axis: axis.update(
+            title_text="Production [Mt]",
+            title_standoff=4,
+            title_font={"size": 28},
+            tickfont={"size": 20},
+        )
+    )
+    if subplot_dim is None:
+        fig_width, fig_height = 1280, 720
+    else:
+        # Size the grid so each panel stays large enough for the bigger fonts.
+        fig_width = 500 * n_cols
+        fig_height = 420 * n_rows
+    fig.update_layout(
+        template="plotly_white",
+        font={"size": 30},
+        legend={"font": {"size": 30}},
+        width=fig_width,
+        height=fig_height,
+    )
+    # Enlarge subplot (facet) titles for readability on slides
+    fig.for_each_annotation(lambda a: a.update(font={"size": 32}))
     return fig
 
 
@@ -137,6 +166,15 @@ comparison_array = fd.flodym_array_stack(arrays, dimension=new_dim) / 1e6
 
 fig = _build_comparison_figure(comparison_array, subplot_dim="r")
 fig.show()
+
+# Save a high-resolution static copy while preserving on-figure relative sizing.
+output_path = pathlib.Path(__file__).with_name("figure_4.png")
+fig.write_image(
+    output_path,
+    width=fig.layout.width,
+    height=fig.layout.height,
+    scale=3,
+)
 
 fig = _build_comparison_figure(comparison_array, subplot_dim=None)
 fig.show()

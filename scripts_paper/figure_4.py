@@ -168,7 +168,7 @@ fig = _build_comparison_figure(comparison_array, subplot_dim="r")
 fig.show()
 
 # Save a high-resolution static copy while preserving on-figure relative sizing.
-output_path = pathlib.Path(__file__).with_name("figure_4.png")
+output_path = pathlib.Path(__file__).with_name("figure_4_regional.png")
 fig.write_image(
     output_path,
     width=fig.layout.width,
@@ -178,3 +178,12 @@ fig.write_image(
 
 fig = _build_comparison_figure(comparison_array, subplot_dim=None)
 fig.show()
+
+# Save a high-resolution static copy while preserving on-figure relative sizing.
+output_path = pathlib.Path(__file__).with_name("figure_4_global.png")
+fig.write_image(
+    output_path,
+    width=fig.layout.width,
+    height=fig.layout.height,
+    scale=3,
+)

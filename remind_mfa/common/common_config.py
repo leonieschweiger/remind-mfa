@@ -83,6 +83,11 @@ class IamcExportCfg(BaseExportCfg):
         return self
 
 
+class ParameterPlotsExportCfg(BaseExportCfg):
+    do_export: bool = False
+    """Whether to export the parameter sanity-check PDF."""
+
+
 class ExportCfg(BaseExportCfg):
     csv: BaseExportCfg
     """Configuration of export to CSV files"""
@@ -94,6 +99,8 @@ class ExportCfg(BaseExportCfg):
     """Configuration of export to documentation files."""
     iamc: IamcExportCfg
     """Configuration of export of results in IAMC format."""
+    parameter_plots: ParameterPlotsExportCfg = ParameterPlotsExportCfg()
+    """Configuration for parameter sanity-check PDF export."""
 
 
 class BaseVisualizationCfg(RemindMFABaseModel):

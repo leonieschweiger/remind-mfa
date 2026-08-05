@@ -88,6 +88,12 @@ class ParameterPlotsExportCfg(BaseExportCfg):
     """Whether to export the parameter sanity-check PDF."""
 
 
+class FlowComparisonPlotsExportCfg(BaseExportCfg):
+    do_export: bool = False
+    """Whether to export the flow-vs-parameter comparison PDFs (production/trade flows overlaid
+    on their input parameters, plus the historic supply-vs-trade diagnostic)."""
+
+
 class ExportCfg(BaseExportCfg):
     csv: BaseExportCfg
     """Configuration of export to CSV files"""
@@ -101,6 +107,8 @@ class ExportCfg(BaseExportCfg):
     """Configuration of export of results in IAMC format."""
     parameter_plots: ParameterPlotsExportCfg = ParameterPlotsExportCfg()
     """Configuration for parameter sanity-check PDF export."""
+    flow_comparison_plots: FlowComparisonPlotsExportCfg = FlowComparisonPlotsExportCfg()
+    """Configuration for the flow-vs-parameter comparison PDF export."""
 
 
 class BaseVisualizationCfg(RemindMFABaseModel):

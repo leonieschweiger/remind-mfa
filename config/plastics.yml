@@ -63,13 +63,15 @@ export:
   pickle:
     do_export: True
   csv:
-    do_export: True
+    do_export: False
   iamc:
-    do_export: True
+    do_export: False
   assumptions:
-    do_export: True
+    do_export: False
   docs:
-    do_export: True
+    do_export: False
     path: 'docs/plastics'
   parameter_plots:
+    do_export: False
+  flow_comparison_plots:
     do_export: False

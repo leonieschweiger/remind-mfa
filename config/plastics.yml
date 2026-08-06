@@ -54,6 +54,8 @@ visualization:
       exclude_flows: [ ]
   sector_splits:
     do_visualize: True
+  material_splits:
+    do_visualize: True
   flows:
     do_visualize: False
 
@@ -63,7 +65,9 @@ export:
   pickle:
     do_export: True
   csv:
-    do_export: False
+    do_export: True
+  mrindustry:
+    do_export: True
   iamc:
     do_export: False
   assumptions:

@@ -16,7 +16,7 @@ model_switches:
   do_stock_extrapolation_by_category: True
 
 visualization:
-  do_visualize: True
+  do_visualize: False
   do_show_figs: True
   do_save_figs: False
   figures_path: 'data/plastics/output/figures'
@@ -60,14 +60,14 @@ visualization:
     do_visualize: False
 
 export:
-  do_export: False
+  do_export: True
   path: 'data/plastics/output/export'
   pickle:
     do_export: True
   csv:
-    do_export: True
+    do_export: False
   mrindustry:
-    do_export: True
+    do_export: False
   iamc:
     do_export: False
   assumptions:
@@ -78,4 +78,4 @@ export:
   parameter_plots:
     do_export: False
   flow_comparison_plots:
-    do_export: False
+    do_export: True

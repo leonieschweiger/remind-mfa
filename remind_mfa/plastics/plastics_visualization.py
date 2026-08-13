@@ -116,7 +116,7 @@ class PlasticsVisualizer(CommonVisualizer):
 
     def visualize_consumption(self, mfa: fd.MFASystem):
         per_capita = self.cfg.consumption.per_capita
-        demand = mfa.stocks["in_use"].inflow.sum_over(("m", "e"))
+        demand = mfa.stocks["in_use"].inflow.sum_over(("p", "m", "e"))
         self.visualize_fdarr_stacked(
             mfa=mfa,
             flow=demand,
@@ -192,7 +192,7 @@ class PlasticsVisualizer(CommonVisualizer):
         fig = px.line(df, x="year", y="value", color="source", markers=True)
 
         ap = self.plotter_class(
-            array=mfa.stocks["in_use"].inflow.sum_over(("r", "m", "e", "g")),
+            array=mfa.stocks["in_use"].inflow.sum_over(("r", "p","m", "e", "g")),
             intra_line_dim="Time",
             title="Demand [t]",
             line_label="REMIND-MFA",
@@ -331,8 +331,8 @@ class PlasticsVisualizer(CommonVisualizer):
     def visualize_material_splits(self, mfa: fd.MFASystem):
 
         material_shares = mfa.parameters["material_shares_use_inflow"][
-            {"t": 2019}
-        ]  # material shares are kept constant over time, so we can just take the value for one year
+            {"t": 2024}
+        ].sum_over(("p",))
         material_shares = material_shares.cumsum(dim_letter="m")
 
         ap_sector_splits = self.plotter_class(

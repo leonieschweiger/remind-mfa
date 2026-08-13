@@ -45,6 +45,8 @@ class PlasticsVisualizer(CommonVisualizer):
             self.visualize_extrapolation(model=model, subplot_dim="Region", linecolor_dim="Good")
 
         if self.cfg.flows.do_visualize:
+            self.visualize_production_trade_consumption(mfa=model.future_mfa, per_capita=False)
+            self.visualize_production_trade_consumption(mfa=model.future_mfa, per_capita=True)
             self.visualize_fdarr_stacked(
                 mfa=model.future_mfa,
                 flow=model.future_mfa.flows["polymerization => primary_market"],
@@ -131,6 +133,52 @@ class PlasticsVisualizer(CommonVisualizer):
         self.visualize_fdarr_stacked(
             mfa=mfa, flow=production, name="Plastics production", regional=regional, linecolor_dim="Material",
         )
+
+    def visualize_production_trade_consumption(self, mfa: fd.MFASystem, per_capita=False):
+        production = (
+            mfa.flows["polymerization => primary_market"] + mfa.flows["reclmech => primary_market"]
+        ).sum_to(("t", "r"))
+        primary_net_imports = (
+            mfa.flows["imports => primary_market"] - mfa.flows["primary_market => exports"]
+        ).sum_to(("t", "r"))
+        final_net_imports = (
+            mfa.flows["imports => good_market"] - mfa.flows["good_market => exports"]
+        ).sum_to(("t", "r"))
+        consumption = mfa.stocks["in_use"].inflow.sum_to(("t", "r"))
+
+        series_specs = [
+            (production, "Production", "#4E79A7"),
+            (primary_net_imports, "Primary net imports", "#F28E2B"),
+            (final_net_imports, "Final net imports", "#E15759"),
+            (consumption, "Consumption", "#59A14F"),
+        ]
+
+        if per_capita:
+            population = mfa.parameters["population"]
+            series_specs = [
+                (array / population, f"{label} (per capita)", color) for array, label, color in series_specs
+            ]
+
+        series_colors = [color for _, _, color in series_specs]
+
+        fig = None
+        for idx, (array, label, color) in enumerate(series_specs):
+            ap = self.plotter_class(
+                array=array,
+                intra_line_dim="Time",
+                subplot_dim="Region",
+                fig=fig,
+                title="Plastics production, net imports, and consumption by region"
+                if idx == 0
+                else None,
+                xlabel="Year",
+                ylabel="Flow [t]",
+                line_label=label,
+                color_map=series_colors,
+            )
+            fig = ap.plot()
+
+        self.plot_and_save_figure(ap, f"production_trade_consumption_by_region{'_per_capita' if per_capita else ''}.png", do_plot=False)
 
     def compare_demand(self, mfa: fd.MFASystem):
         df = pd.read_csv("data/plastics/input/validation.csv", sep=";")

@@ -128,8 +128,8 @@ class PlasticsVisualizer(CommonVisualizer):
         production = (
             mfa.flows["polymerization => primary_market"] + mfa.flows["reclmech => primary_market"]
         )
-        self.visualize_fdarr(
-            mfa=mfa, flow=production, name="Plastics production", regional=regional
+        self.visualize_fdarr_stacked(
+            mfa=mfa, flow=production, name="Plastics production", regional=regional, linecolor_dim="Material",
         )
 
     def compare_demand(self, mfa: fd.MFASystem):

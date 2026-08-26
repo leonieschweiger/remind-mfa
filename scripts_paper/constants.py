@@ -1,16 +1,15 @@
 import pathlib
 
-
 PATH_CEMENT = pathlib.Path("data/cement/output/export/pickle")
 PATH_PLASTICS = pathlib.Path("data/plastics/output/export/pickle")
 PATH_STEEL = pathlib.Path("data/steel/output/export/pickle")
 
 # Default runs use SSP2 unless explicitly noted otherwise.
-RUN_CEMENT = "model_cement_SSP2_h12_2026-05-26--15-48-57"
-RUN_PLASTICS = "model_plastics_SSP2_h12_2026-05-26--15-48-14"
-RUN_STEEL = "model_steel_SSP2_h12_2026-05-26--16-00-33"
-RUN_STEEL_SSP1 = "model_steel_SSP1_h12_2026-05-26--16-01-36"
-RUN_STEEL_SSP1_LD = "model_steel_SSP1_LD_h12_2026-05-26--15-47-00"
+RUN_CEMENT = "model_cement_SSP2_h12_2026-07-28--10-06-30"
+RUN_PLASTICS = "model_plastics_SSP2_h12_2026-07-30--17-31-38"
+RUN_STEEL = "model_steel_SSP2_h12_2026-07-28--10-04-53"
+RUN_STEEL_SSP1 = "model_steel_SSP1_h12_2026-07-30--10-05-55"
+RUN_STEEL_SSP1_LD = "model_steel_SSP1_LD_h12_2026-07-30--10-06-32"
 
 LAST_HISTORICAL_YEAR_CEMENT = 2023
 LAST_HISTORICAL_YEAR_PLASTICS = 2019
@@ -22,17 +21,66 @@ REGION_DISPLAY_NAMES = {
     "EUR": "EU 28",
     "IND": "India",
     "JPN": "Japan",
-    # "LAM": "Latin America and<br>the Caribbean",
     "LAM": "Latin America",
-    # "MEA": "Middle East,<br>North Africa,<br>Central Asia",
     "MEA": "Mdl. East & N. Africa",
     "NEU": "Non-EU28 Europe",
     "OAS": "Other Asia",
-    # "REF": "Countries from the<br>Reforming Economies of<br>the Former Soviet Union",
     "REF": "Former Soviet Union",
     "SSA": "Sub-Saharan Africa",
     "USA": "USA",
 }
+
+AGG_REGIONS = {
+    "CAZ": "OECD",
+    "CHA": "China",
+    "EUR": "OECD",
+    "IND": "S & SE Asia",
+    "JPN": "OECD",
+    "LAM": "Rest of the World",
+    "MEA": "Rest of the World",
+    "NEU": "OECD",
+    "OAS": "S & SE Asia",
+    "REF": "Rest of the World",
+    "SSA": "Sub-Saharan Africa",
+    "USA": "OECD",
+}
+
+AGG_REGION_ORDER = [
+    "Sub-Saharan Africa",
+    "S & SE Asia",
+    "Rest of the World",
+    "China",
+    "OECD",
+]
+
+VIRIDIS_MOD_5 = [
+    "#D6C73D",
+    "#56BB58",
+    "#28858B",
+    "#2F4E94",
+    "#6B2F2B",
+]
+OKABE_ITO_5 = [
+    "#0072B2",  # blue
+    "#009E73",  # bluish green
+    "#F0E442",  # yellow
+    "#E69F00",  # orange
+    "#CC79A7",  # reddish purple
+]
+# ONLY FOR REFERENCE
+OKABE_ITO_8 = [
+    "#E69F00",  # orange
+    "#56B4E9",  # sky blue
+    "#009E73",  # bluish green
+    "#F0E442",  # yellow
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#000000",  # black
+]
+# CMAP_5 = OKABE_ITO_5
+CMAP_5 = VIRIDIS_MOD_5
+
+AGG_COLOR_PALETTE = dict(zip(AGG_REGION_ORDER, CMAP_5))
 
 COLOR_PALETTE_1 = [
     "#6929c4",  # Purple
